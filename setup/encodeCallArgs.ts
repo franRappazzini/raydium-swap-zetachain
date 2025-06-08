@@ -82,44 +82,12 @@ async function encode() {
     epochInfo: await raydium.fetchEpochInfo(),
   });
 
+  // TODO: remaining accounts => are the accounts that need to be passed to the transaction
   const convertedAccountMetas: AccountMeta[] = remainingAccounts.map((account) => ({
     pubkey: account,
     isSigner: false,
     isWritable: true,
   }));
-
-  convertedAccountMetas.forEach((account, index) => {
-    console.log(`Remaining Account ${index}:`, account.pubkey.toBase58());
-  });
-
-  console.log("ammConfig:", AMM_CONFIG.toBase58());
-  console.log("Pool address:", poolAddress.toBase58());
-  console.log("Input Vault:", inputVault.toBase58());
-  console.log("Output Vault:", outputVault.toBase58());
-  console.log("Observation State:", clmmPoolInfo.observationId.toBase58());
-
-  // const ix = await program.methods
-  //   .onCall(
-  //     amount,
-  //     sender,
-  //     data,
-  //     otherAmountThreshold, // [?] raydium params
-  //     sqrtPriceLimitX64, // [?] raydium params
-  //     isBaseInput // [?] raydium params
-  //   )
-  //   .accounts({
-  //     ammConfig: AMM_CONFIG,
-  //     poolState: poolAddress,
-  //     inputVault,
-  //     outputVault,
-  //     inputVaultMint: inputToken,
-  //     outputVaultMint: outputToken,
-  //     observationState: clmmPoolInfo.observationId,
-  //     gatewayPda,
-  //     tokenProgram: TOKEN_PROGRAM_ID,
-  //   })
-  //   .remainingAccounts(convertedAccountMetas)
-  //   .instruction();
 
   const accounts = [
     {
