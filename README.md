@@ -7,6 +7,10 @@ This project is an Anchor program for Solana that interacts with ZetaChain and p
 - **Receives and sends calls and tokens** to and from ZetaChain.
 - **Token swaps** using Raydium's Concentrated Liquidity Market Maker (CLMM) via CPI.
 
+## Auditware Radar audit
+
+<img src="https://img.shields.io/github/actions/workflow/status/franRappazzini/raydium-swap-zetachain/radar.yaml">
+
 ## Requirements
 
 - [Anchor](https://book.anchor-lang.com/)
