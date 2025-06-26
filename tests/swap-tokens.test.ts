@@ -24,7 +24,7 @@ describe("swap-tokens", () => {
 
   const program = anchor.workspace.swapTokens as Program<SwapTokens>;
 
-  const SEED_VAULT = "vault";
+  const SEED_VAULT = "connected";
   const GATEWAY_PROGRAM_ID = new PublicKey("ZETAjseVjuFsxdRxo6MmTCvqFwb3ZHUx56Co3vCmGis");
   const USDC_MINT = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
   const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
@@ -80,7 +80,8 @@ describe("swap-tokens", () => {
     // method args
     const amount = bn(5_000_000); // 0.005 SOL
     // const sender = convertEthAddressToBytes("0xEab928b5aFb7C96128d4f6078C19f60b2582aFdb"); // Example Ethereum address
-    const sender = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98"); // Example Ethereum address
+    // const sender = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98"); // Example Ethereum address
+    const sender = convertEthAddressToBytes("0xC2fB8360d7a2D87BC6f3F6956cAf721635143263"); // zetachain tesnet smart contract address
     // const data = Buffer.from("Hello from ZetaChain!");
     const otherAmountThreshold = bn(1); // 0.000001 USDC - for slippage check - min amount out (for devnet)
     const sqrtPriceLimitX64 = bn(0); // 0 = no limit (for devnet)

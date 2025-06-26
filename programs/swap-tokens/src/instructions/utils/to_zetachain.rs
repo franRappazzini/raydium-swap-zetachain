@@ -1,7 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
 
-use crate::gateway::{self};
+use crate::{
+    constants::SEED_VAULT,
+    gateway::{self},
+};
 
 pub fn send_spl_to_zetachain<'info>(
     signer: &Signer<'info>,
@@ -41,16 +44,20 @@ pub fn send_spl_to_zetachain<'info>(
 }
 
 pub fn call_zetachain<'info>(
-    signer: &Signer<'info>,
+    signer: &SystemAccount<'info>,
     receiver: [u8; 20],
     message: &str,
     gateway_program: &Program<'info, gateway::program::Gateway>,
+    bump: u8,
 ) -> Result<()> {
-    let cpi_ctx = CpiContext::new(
+    let signer_seeds: &[&[&[u8]]] = &[&[SEED_VAULT, &[bump]]];
+
+    let cpi_ctx = CpiContext::new_with_signer(
         gateway_program.to_account_info(),
         gateway::cpi::accounts::Call {
             signer: signer.to_account_info(),
         },
+        signer_seeds,
     );
 
     let message = message.as_bytes().to_vec();

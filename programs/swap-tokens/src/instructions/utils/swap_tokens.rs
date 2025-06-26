@@ -10,12 +10,14 @@ use raydium_clmm_cpi::{
     states::{AmmConfig, ObservationState, PoolState},
 };
 
+use crate::constants::SEED_VAULT;
+
 pub fn swap_tokens<'a, 'b, 'c: 'info, 'info>(
     amount: u64,
     other_amount_threshold: u64,
     sqrt_price_limit_x64: u128,
     is_base_input: bool,
-    payer: &Signer<'info>,
+    payer: &SystemAccount<'info>,
     clmm_program: &Program<'info, RaydiumClmm>,
     amm_config: &Box<Account<'info, AmmConfig>>,
     pool_state: &AccountLoader<'info, PoolState>,
@@ -30,6 +32,7 @@ pub fn swap_tokens<'a, 'b, 'c: 'info, 'info>(
     input_vault_mint: &Box<InterfaceAccount<'info, Mint>>,
     output_vault_mint: &Box<InterfaceAccount<'info, Mint>>,
     remaining_accounts: &'c [AccountInfo<'info>],
+    bump: u8,
 ) -> Result<()> {
     let cpi_accounts = cpi::accounts::SwapSingleV2 {
         payer: payer.to_account_info(),
@@ -47,8 +50,11 @@ pub fn swap_tokens<'a, 'b, 'c: 'info, 'info>(
         output_vault_mint: output_vault_mint.to_account_info(),
     };
 
-    let cpi_context = CpiContext::new(clmm_program.to_account_info(), cpi_accounts)
-        .with_remaining_accounts(remaining_accounts.to_vec());
+    let signer_seeds: &[&[&[u8]]] = &[&[SEED_VAULT, &[bump]]];
+
+    let cpi_context =
+        CpiContext::new_with_signer(clmm_program.to_account_info(), cpi_accounts, signer_seeds)
+            .with_remaining_accounts(remaining_accounts.to_vec());
 
     cpi::swap_v2(
         cpi_context,

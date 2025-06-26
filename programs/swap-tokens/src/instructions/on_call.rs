@@ -19,8 +19,8 @@ use crate::{
 #[derive(Accounts)]
 #[instruction(amount: u64, sender: [u8; 20])]
 pub struct OnCall<'info> {
-    #[account(mut)]
-    pub signer: Signer<'info>,
+    // #[account(mut)]
+    // pub signer: Signer<'info>,
 
     // -- zetachain accounts --
 
@@ -30,8 +30,10 @@ pub struct OnCall<'info> {
     // pub token_mint: Box<InterfaceAccount<'info, Mint>>,
 
     // [x]
-    #[account(mut/* , seeds = [b"meta"], bump */)]
-    pub gateway_pda: Account<'info, gateway::accounts::Pda>,
+    // #[account(mut/* , seeds = [b"meta"], bump */)]
+    // pub gateway_pda: Account<'info, gateway::accounts::Pda>,
+    /// CHECK: zetachain gateway PDA account
+    pub gateway_pda: UncheckedAccount<'info>,
 
     // [x] The destination token account owned by the gateway PDA.
     // #[account(mut)]
@@ -42,7 +44,6 @@ pub struct OnCall<'info> {
     // pub whitelist_entry: Account<'info, gateway::accounts::WhitelistEntry>,
 
     // -- swap accounts --
-    pub clmm_program: Program<'info, RaydiumClmm>,
 
     // [x] The factory state to read protocol fees
     #[account(address = pool_state.load()?.amm_config)]
@@ -64,12 +65,6 @@ pub struct OnCall<'info> {
     #[account(mut, address = pool_state.load()?.observation_key)]
     pub observation_state: AccountLoader<'info, ObservationState>,
 
-    // SPL program 2022 for token transfers
-    pub token_program_2022: Program<'info, Token2022>,
-
-    // memo program
-    pub memo_program: Program<'info, Memo>,
-
     // [x] The mint of token vault 0
     #[account(
         address = input_vault.mint
@@ -87,10 +82,13 @@ pub struct OnCall<'info> {
     /// CHECK: PDA that hold SOL
     #[account(
         mut,
-        seeds = [SEED_VAULT],
+        seeds = [SEED_VAULT], 
         bump,
     )]
     pub vault_pda: SystemAccount<'info>,
+
+    pub token_program: Interface<'info, TokenInterface>,
+    pub system_program: Program<'info, System>,
 
     // eth sender output vault
     #[account(
@@ -118,32 +116,41 @@ pub struct OnCall<'info> {
     #[account(
         init_if_needed,
         payer = signer,
-        seeds = [SEED_VAULT, input_vault_mint.key().as_ref(), signer.key().as_ref()],
+        seeds = [SEED_VAULT, input_vault_mint.key().as_ref(), vault_pda.key().as_ref()],
         bump,
         token::mint = input_vault_mint,
-        token::authority = signer,
+        token::authority = vault_pda,
         token::token_program = token_program,
     )]
     pub wsol_gateway_account: Box<InterfaceAccount<'info, TokenAccount>>,
 
+    #[account(mut)]
+    pub signer: Signer<'info>,
+
+    // SPL program 2022 for token transfers
+    pub token_program_2022: Program<'info, Token2022>,
+    // memo program
+    pub memo_program: Program<'info, Memo>,
     pub gateway_program: Program<'info, gateway::program::Gateway>,
-    pub token_program: Interface<'info, TokenInterface>, // duplicate
-    pub system_program: Program<'info, System>,
+    pub clmm_program: Program<'info, RaydiumClmm>,
 }
 
 pub fn process_on_call<'a, 'b, 'c: 'info, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, OnCall<'info>>,
     amount: u64,
     sender: [u8; 20],
-    data: Vec<u8>,
+    _data: Vec<u8>,
 ) -> Result<()> {
     // initialize sender pda
-    ctx.accounts.sender_vault.set_inner(Vault {
-        evm_owner: sender,
-        token_mint: ctx.accounts.output_vault_mint.key(),
-        token_account: ctx.accounts.sender_token_account.key(),
-        bump: ctx.bumps.sender_vault,
-    });
+    if !ctx.accounts.sender_vault.initialized {
+        ctx.accounts.sender_vault.set_inner(Vault {
+            evm_owner: sender,
+            token_mint: ctx.accounts.output_vault_mint.key(),
+            token_account: ctx.accounts.sender_token_account.key(),
+            initialized: true,
+            bump: ctx.bumps.sender_vault,
+        });
+    }
 
     let acc = &ctx.accounts;
 
@@ -151,11 +158,11 @@ pub fn process_on_call<'a, 'b, 'c: 'info, 'info>(
     msg!("Sender token account: {}", acc.sender_token_account.key());
 
     // Deserialize the data
-    let binding = data.to_vec();
-    let json_str = std::str::from_utf8(&binding).unwrap();
-    let data: Data = serde_json::from_str(json_str).unwrap();
+    // let binding = data.to_vec();
+    // let json_str = std::str::from_utf8(&binding).unwrap();
+    // let data: Data = serde_json::from_str(json_str).unwrap();
 
-    msg!("Data deserialized: {:?}", data);
+    // msg!("Data deserialized: {:?}", data);
 
     // swap sol -> wsol
     utils::wrap_sol(
@@ -172,10 +179,10 @@ pub fn process_on_call<'a, 'b, 'c: 'info, 'info>(
     // swap wsol -> usdc
     utils::swap_tokens(
         amount,
-        data.otherAmountThreshold,
-        data.sqrtPriceLimitX64,
-        data.isBaseInput,
-        &acc.signer,
+        1,    // data.otherAmountThreshold,
+        0,    // data.sqrtPriceLimitX64,
+        true, // data.isBaseInput,
+        &acc.vault_pda,
         &acc.clmm_program,
         &acc.amm_config,
         &acc.pool_state,
@@ -190,6 +197,7 @@ pub fn process_on_call<'a, 'b, 'c: 'info, 'info>(
         &acc.input_vault_mint,  // wsol mint
         &acc.output_vault_mint, // usdc mint
         ctx.remaining_accounts,
+        ctx.bumps.vault_pda,
     )?;
 
     msg!("Swap successfully!");
@@ -222,7 +230,13 @@ pub fn process_on_call<'a, 'b, 'c: 'info, 'info>(
     let message = format!("{} tokens received", tokens_swapped);
     msg!("Sending message to gateway: {}", message);
 
-    utils::call_zetachain(&acc.signer, sender, &message, &acc.gateway_program)
+    utils::call_zetachain(
+        &acc.vault_pda,
+        sender,
+        &message,
+        &acc.gateway_program,
+        ctx.bumps.vault_pda,
+    )
 }
 
 #[derive(Debug, Deserialize)]
