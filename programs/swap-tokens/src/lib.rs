@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 
 use instructions::*;
 
-declare_id!("BaNo3XBxy6XgGBcU8hvTqYpBPTcJBoSg89gcM4zHUCnK");
+declare_id!("4eZPhSi5ZroCpTVffVePsQo1Eb7ZmmJq6ef1D7yypxrr");
 
 declare_program!(gateway);
 
@@ -35,8 +35,11 @@ pub mod swap_tokens {
         instructions::process_call_zetachain(ctx, receiver, message)
     }
 
-    // TODO
-    // pub fn send_tokens(ctx: Context<SendTokens>) -> Result<()> {
-    //     instructions::process_send_tokens(ctx)
-    // }
+    pub fn send_spl_to_zetachain(
+        ctx: Context<SendSplToZetaChain>,
+        amount: u64,
+        receiver: [u8; 20],
+    ) -> Result<()> {
+        instructions::process_send_spl_to_zetachain(ctx, amount, receiver)
+    }
 }

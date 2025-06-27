@@ -9,11 +9,11 @@ import {
   Raydium,
   ReturnTypeFetchMultiplePoolTickArrays,
 } from "@raydium-io/raydium-sdk-v2";
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { getPoolAddress, getPoolVaultAddress } from "./utils/pda";
 
 import { Program } from "@coral-xyz/anchor";
 import { SwapTokens } from "../target/types/swap_tokens";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 describe("swap-tokens", () => {
   const provider = anchor.AnchorProvider.env();
@@ -33,23 +33,20 @@ describe("swap-tokens", () => {
   const CLMM_PROGRAM_ID = new PublicKey("devi51mZmdwUJGU9hjN27vEz64Gps7uUefqxg27EAtH");
   const AMM_CONFIG = new PublicKey("CQYbhr6amxUER4p5SC44C63R4qw4NFc9Z4Db9vF4tZwG");
 
-  const [gatewayPda, _bump] = PublicKey.findProgramAddressSync(
-    [Buffer.from("meta")],
-    GATEWAY_PROGRAM_ID
-  );
+  const [gatewayPda] = PublicKey.findProgramAddressSync([Buffer.from("meta")], GATEWAY_PROGRAM_ID);
 
-  it("Should initialize PDAs!", async () => {
-    const tx = await program.methods
-      .initialize()
-      .accounts({
-        wsolMint: WSOL_MINT,
-        usdcMint: USDC_MINT,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .rpc();
+  // it("Should initialize PDAs!", async () => {
+  //   const tx = await program.methods
+  //     .initialize()
+  //     .accounts({
+  //       wsolMint: WSOL_MINT,
+  //       usdcMint: USDC_MINT,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //     })
+  //     .rpc();
 
-    console.log("initialize_pda tx signature:", tx);
-  });
+  //   console.log("initialize_pda tx signature:", tx);
+  // });
 
   // it("Should deposit SOL on vault_pda!", async () => {
   //   const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -178,6 +175,26 @@ describe("swap-tokens", () => {
 
   //   console.log("on_call tx signature:", tx);
   // });
+
+  it("Should send SPL token to ZetaChain!", async () => {
+    // calculate usdc balance in usdc_vault
+
+    const amount = 1_000_000; // 0.001 USDC
+    const receiver = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98"); // zetachain tesnet smart contract address
+
+    const gatewayUsdcAta = getAssociatedTokenAddressSync(USDC_MINT, gatewayPda, true);
+
+    const tx = await program.methods
+      .sendSplToZetachain(bn(amount), receiver)
+      .accounts({
+        splMint: USDC_MINT,
+        to: gatewayUsdcAta,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
+
+    console.log("send_spl_to_zetachain tx signature:", tx);
+  });
 });
 
 function bn(n: number) {
