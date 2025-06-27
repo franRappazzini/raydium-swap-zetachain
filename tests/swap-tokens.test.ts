@@ -40,41 +40,41 @@ describe("swap-tokens", () => {
 
   // it("Should initialize PDAs!", async () => {
   //   const tx = await program.methods
-  //     .initializePda()
+  //     .initialize()
   //     .accounts({
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //       tokenMint: USDC_MINT,
   //       wsolMint: WSOL_MINT,
+  //       usdcMint: USDC_MINT,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
   //     })
   //     .rpc();
 
   //   console.log("initialize_pda tx signature:", tx);
   // });
 
-  it("Should deposit SOL on vault_pda!", async () => {
-    const [vaultPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEED_VAULT)],
-      program.programId
-    );
+  // it("Should deposit SOL on vault_pda!", async () => {
+  //   const [vaultPda] = PublicKey.findProgramAddressSync(
+  //     [Buffer.from(SEED_VAULT)],
+  //     program.programId
+  //   );
 
-    const amount = 5_000_000; // 0.005 SOL
+  //   const amount = 5_000_000; // 0.005 SOL
 
-    console.log("Vault PDA:", vaultPda.toBase58());
+  //   console.log("Vault PDA:", vaultPda.toBase58());
 
-    const tx = await sendAndConfirmTransaction(
-      connection,
-      new anchor.web3.Transaction().add(
-        anchor.web3.SystemProgram.transfer({
-          fromPubkey: wallet.publicKey,
-          toPubkey: vaultPda,
-          lamports: amount,
-        })
-      ),
-      [wallet.payer],
-      { skipPreflight: true }
-    );
-    console.log("Deposit SOL tx signature:", tx);
-  });
+  //   const tx = await sendAndConfirmTransaction(
+  //     connection,
+  //     new anchor.web3.Transaction().add(
+  //       anchor.web3.SystemProgram.transfer({
+  //         fromPubkey: wallet.publicKey,
+  //         toPubkey: vaultPda,
+  //         lamports: amount,
+  //       })
+  //     ),
+  //     [wallet.payer],
+  //     { skipPreflight: true }
+  //   );
+  //   console.log("Deposit SOL tx signature:", tx);
+  // });
 
   it("Should call on_call method!", async () => {
     // method args
@@ -162,6 +162,7 @@ describe("swap-tokens", () => {
         outputVault,
         inputVaultMint: inputToken,
         outputVaultMint: outputToken,
+        wsolMint: WSOL_MINT,
         observationState: clmmPoolInfo.observationId,
         gatewayPda,
         tokenProgram: TOKEN_PROGRAM_ID,

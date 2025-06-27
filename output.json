@@ -1,0 +1,22 @@
+[
+    {
+        "name": "Missing Signer Check",
+        "description": "Signer checks verify whether an account owner has authorized the requested transaction. Failing to perform these checks might result in unintended operations executable by any account.",
+        "severity": "Low",
+        "certainty": "Low",
+        "locations": [
+            "/Users/franrappazzini/personal/zetachain/swap-tokens/programs/swap-tokens/src/instructions/on_call.rs:19:3-9",
+            "/Users/franrappazzini/personal/zetachain/swap-tokens/programs/swap-tokens/src/instructions/initialize.rs:6:3-9"
+        ]
+    },
+    {
+        "name": "Missing Owner Check",
+        "description": "The Account struct includes an owner field indicating the key associated with that account's owner. This field should be used to ensure a caller of an owner-only intended functionality, is in fact the owner.",
+        "severity": "Low",
+        "certainty": "Low",
+        "locations": [
+            "/Users/franrappazzini/personal/zetachain/swap-tokens/programs/swap-tokens/src/instructions/on_call.rs:19:3-9",
+            "/Users/franrappazzini/personal/zetachain/swap-tokens/programs/swap-tokens/src/instructions/initialize.rs:6:3-9"
+        ]
+    }
+]

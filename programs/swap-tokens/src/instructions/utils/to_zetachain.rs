@@ -44,20 +44,20 @@ pub fn send_spl_to_zetachain<'info>(
 }
 
 pub fn call_zetachain<'info>(
-    signer: &SystemAccount<'info>,
+    signer: &Signer<'info>,
     receiver: [u8; 20],
-    message: &str,
+    message: String,
     gateway_program: &Program<'info, gateway::program::Gateway>,
-    bump: u8,
+    // bump: u8,
 ) -> Result<()> {
-    let signer_seeds: &[&[&[u8]]] = &[&[SEED_VAULT, &[bump]]];
+    // let signer_seeds: &[&[&[u8]]] = &[&[SEED_VAULT, &[bump]]];
 
-    let cpi_ctx = CpiContext::new_with_signer(
+    let cpi_ctx = CpiContext::new(
         gateway_program.to_account_info(),
         gateway::cpi::accounts::Call {
             signer: signer.to_account_info(),
         },
-        signer_seeds,
+        // signer_seeds,
     );
 
     let message = message.as_bytes().to_vec();
