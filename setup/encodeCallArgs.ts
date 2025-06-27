@@ -5,14 +5,19 @@ import {
   ApiV3PoolInfoConcentratedItem,
   ClmmKeys,
   ComputeClmmPoolInfo,
+  MEMO_PROGRAM_ID,
   PoolUtils,
   Raydium,
   ReturnTypeFetchMultiplePoolTickArrays,
 } from "@raydium-io/raydium-sdk-v2";
+import {
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 import { getPoolAddress, getPoolVaultAddress } from "./utils/pda";
 
 import { SwapTokens } from "./../target/types/swap_tokens";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { ethers } from "ethers";
 
 /*
@@ -91,10 +96,16 @@ async function encode() {
     throw new Error("input mint does not match pool");
   }
 
+  const sender = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98");
+
   const [senderVault] = PublicKey.findProgramAddressSync(
-    [Buffer.from(SEED_VAULT), outputToken.toBytes()],
+    [Buffer.from(SEED_VAULT), outputToken.toBytes(), sender],
     program.programId
   );
+
+  const senderTokenAccount = getAssociatedTokenAddressSync(outputToken, senderVault, true);
+
+  const wsolGatewayAccount = getAssociatedTokenAddressSync(WSOL_MINT, programPda, true);
 
   const { remainingAccounts } = PoolUtils.computeAmountIn({
     poolInfo: clmmPoolInfo,
@@ -176,6 +187,41 @@ async function encode() {
       publicKey: ethers.hexlify(anchor.web3.SystemProgram.programId.toBytes()),
     },
 
+    // sender_vault
+    // sender_token_account
+    // wsol_gateway_account
+    // token_program_2022
+    // memo_program
+    // gateway_program
+    // clmm_program
+    {
+      isWritable: true,
+      publicKey: ethers.hexlify(senderVault.toBytes()),
+    },
+    {
+      isWritable: true,
+      publicKey: ethers.hexlify(senderTokenAccount.toBytes()),
+    },
+    {
+      isWritable: true,
+      publicKey: ethers.hexlify(wsolGatewayAccount.toBytes()),
+    },
+    {
+      isWritable: false,
+      publicKey: ethers.hexlify(TOKEN_2022_PROGRAM_ID.toBytes()),
+    },
+    {
+      isWritable: false,
+      publicKey: ethers.hexlify(MEMO_PROGRAM_ID.toBytes()),
+    },
+    {
+      isWritable: false,
+      publicKey: ethers.hexlify(GATEWAY_PROGRAM_ID.toBytes()),
+    },
+    {
+      isWritable: false,
+      publicKey: ethers.hexlify(CLMM_PROGRAM_ID.toBytes()),
+    },
     ...convertedAccountMetas.map(({ pubkey, isWritable }) => ({
       isWritable,
       publicKey: ethers.hexlify(pubkey.toBytes()),
@@ -209,3 +255,12 @@ encode();
 // decode(
 //   "0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000001a0000000000000000000000000000000000000000000000000000000000000000507632f009cc8c27a91daa4b392a1bd92f50a80b0e1be0b6742c247acfaec6512000000000000000000000000000000000000000000000000000000000000000118a14c1ff4fdcdb919aadb9fc2340cc5047960db89930154409cccdf9a65bb420000000000000000000000000000000000000000000000000000000000000000872f949c50c3f60eda612ac9b076cd8a37ba9e5afffd121424804bdf29d28c0d00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000006a7d517187bd16635dad40455fdc2c0c124c68f215675a5dbbacb5f080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000568656c6c6f000000000000000000000000000000000000000000000000000000"
 // );
+
+function convertEthAddressToBytes(ethAddress: string) {
+  const hexString = ethAddress.startsWith("0x") ? ethAddress.slice(2) : ethAddress;
+
+  const buffer = Buffer.from(hexString, "hex");
+
+  // return Buffer.from(buffer);
+  return buffer;
+}

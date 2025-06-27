@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-swap_tokens = "7S2fpcivki2aQSsm1GjkQbPmEQLaRLr9Erip24Lcq9QS"
+swap_tokens = "7ZvMhuVQ6xSSnPNFqnoZeBbzQjqdy9fsWuJf8sx5xYvY"
 
 [registry]
 url = "https://api.apr.dev"

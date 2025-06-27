@@ -51,30 +51,30 @@ describe("swap-tokens", () => {
   //   console.log("initialize_pda tx signature:", tx);
   // });
 
-  it("Should deposit SOL on vault_pda!", async () => {
-    const [vaultPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from(SEED_VAULT)],
-      program.programId
-    );
+  // it("Should deposit SOL on vault_pda!", async () => {
+  //   const [vaultPda] = PublicKey.findProgramAddressSync(
+  //     [Buffer.from(SEED_VAULT)],
+  //     program.programId
+  //   );
 
-    const amount = 5_000_000; // 0.005 SOL
+  //   const amount = 500_000_000; // 0.5 SOL
 
-    console.log("Vault PDA:", vaultPda.toBase58());
+  //   console.log("Vault PDA:", vaultPda.toBase58());
 
-    const tx = await sendAndConfirmTransaction(
-      connection,
-      new anchor.web3.Transaction().add(
-        anchor.web3.SystemProgram.transfer({
-          fromPubkey: wallet.publicKey,
-          toPubkey: vaultPda,
-          lamports: amount,
-        })
-      ),
-      [wallet.payer],
-      { skipPreflight: true }
-    );
-    console.log("Deposit SOL tx signature:", tx);
-  });
+  //   const tx = await sendAndConfirmTransaction(
+  //     connection,
+  //     new anchor.web3.Transaction().add(
+  //       anchor.web3.SystemProgram.transfer({
+  //         fromPubkey: wallet.publicKey,
+  //         toPubkey: vaultPda,
+  //         lamports: amount,
+  //       })
+  //     ),
+  //     [wallet.payer],
+  //     { skipPreflight: true }
+  //   );
+  //   console.log("Deposit SOL tx signature:", tx);
+  // });
 
   it("Should call on_call method!", async () => {
     // method args
@@ -167,6 +167,7 @@ describe("swap-tokens", () => {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .remainingAccounts(convertedAccountMetas)
+      .signers([])
       .instruction();
 
     const buildTx = new anchor.web3.Transaction().add(ix);
