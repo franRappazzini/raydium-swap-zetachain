@@ -6,7 +6,7 @@ use anchor_lang::prelude::*;
 
 use instructions::*;
 
-declare_id!("6wuGf37dGSeCrA6adrCTGP9wrHewHdWjNvQ1xSaF1g99");
+declare_id!("BaNo3XBxy6XgGBcU8hvTqYpBPTcJBoSg89gcM4zHUCnK");
 
 declare_program!(gateway);
 

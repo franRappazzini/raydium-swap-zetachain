@@ -38,18 +38,18 @@ describe("swap-tokens", () => {
     GATEWAY_PROGRAM_ID
   );
 
-  // it("Should initialize PDAs!", async () => {
-  //   const tx = await program.methods
-  //     .initialize()
-  //     .accounts({
-  //       wsolMint: WSOL_MINT,
-  //       usdcMint: USDC_MINT,
-  //       tokenProgram: TOKEN_PROGRAM_ID,
-  //     })
-  //     .rpc();
+  it("Should initialize PDAs!", async () => {
+    const tx = await program.methods
+      .initialize()
+      .accounts({
+        wsolMint: WSOL_MINT,
+        usdcMint: USDC_MINT,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .rpc();
 
-  //   console.log("initialize_pda tx signature:", tx);
-  // });
+    console.log("initialize_pda tx signature:", tx);
+  });
 
   // it("Should deposit SOL on vault_pda!", async () => {
   //   const [vaultPda] = PublicKey.findProgramAddressSync(
@@ -76,108 +76,108 @@ describe("swap-tokens", () => {
   //   console.log("Deposit SOL tx signature:", tx);
   // });
 
-  it("Should call on_call method!", async () => {
-    // method args
-    const amount = bn(5_000_000); // 0.005 SOL
-    // const sender = convertEthAddressToBytes("0xEab928b5aFb7C96128d4f6078C19f60b2582aFdb"); // Example Ethereum address
-    // const sender = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98"); // Example Ethereum address
-    const sender = convertEthAddressToBytes("0xC2fB8360d7a2D87BC6f3F6956cAf721635143263"); // zetachain tesnet smart contract address
-    // const data = Buffer.from("Hello from ZetaChain!");
-    const otherAmountThreshold = bn(1); // 0.000001 USDC - for slippage check - min amount out (for devnet)
-    const sqrtPriceLimitX64 = bn(0); // 0 = no limit (for devnet)
-    const isBaseInput = true; // assuming we are providing base token (WSOL)
-    const obj = {
-      otherAmountThreshold: otherAmountThreshold.toNumber(),
-      sqrtPriceLimitX64: sqrtPriceLimitX64.toNumber(),
-      isBaseInput,
-    };
-    const message = JSON.stringify(obj);
-    const data = Buffer.from(message);
+  // it("Should call on_call method!", async () => {
+  //   // method args
+  //   const amount = bn(5_000_000); // 0.005 SOL
+  //   // const sender = convertEthAddressToBytes("0xEab928b5aFb7C96128d4f6078C19f60b2582aFdb"); // Example Ethereum address
+  //   // const sender = convertEthAddressToBytes("0x0080672c562ACE2e47FEDe0d7E80255f3f795a98"); // Example Ethereum address
+  //   const sender = convertEthAddressToBytes("0xC2fB8360d7a2D87BC6f3F6956cAf721635143263"); // zetachain tesnet smart contract address
+  //   // const data = Buffer.from("Hello from ZetaChain!");
+  //   const otherAmountThreshold = bn(1); // 0.000001 USDC - for slippage check - min amount out (for devnet)
+  //   const sqrtPriceLimitX64 = bn(0); // 0 = no limit (for devnet)
+  //   const isBaseInput = true; // assuming we are providing base token (WSOL)
+  //   const obj = {
+  //     otherAmountThreshold: otherAmountThreshold.toNumber(),
+  //     sqrtPriceLimitX64: sqrtPriceLimitX64.toNumber(),
+  //     isBaseInput,
+  //   };
+  //   const message = JSON.stringify(obj);
+  //   const data = Buffer.from(message);
 
-    // raydium setup (swap)
-    const raydium = await Raydium.load({
-      owner: wallet.payer,
-      connection,
-      cluster: "devnet",
-    });
+  //   // raydium setup (swap)
+  //   const raydium = await Raydium.load({
+  //     owner: wallet.payer,
+  //     connection,
+  //     cluster: "devnet",
+  //   });
 
-    const inputToken = WSOL_MINT;
-    const outputToken = USDC_MINT;
+  //   const inputToken = WSOL_MINT;
+  //   const outputToken = USDC_MINT;
 
-    // WSOL-USDC pool
-    const [poolAddress] = getPoolAddress(AMM_CONFIG, inputToken, outputToken, CLMM_PROGRAM_ID);
+  //   // WSOL-USDC pool
+  //   const [poolAddress] = getPoolAddress(AMM_CONFIG, inputToken, outputToken, CLMM_PROGRAM_ID);
 
-    let poolInfo: ApiV3PoolInfoConcentratedItem;
-    let poolKeys: ClmmKeys | undefined;
-    let clmmPoolInfo: ComputeClmmPoolInfo;
-    let tickCache: ReturnTypeFetchMultiplePoolTickArrays;
+  //   let poolInfo: ApiV3PoolInfoConcentratedItem;
+  //   let poolKeys: ClmmKeys | undefined;
+  //   let clmmPoolInfo: ComputeClmmPoolInfo;
+  //   let tickCache: ReturnTypeFetchMultiplePoolTickArrays;
 
-    const rData = await raydium.clmm.getPoolInfoFromRpc(poolAddress.toBase58());
-    poolInfo = rData.poolInfo;
-    poolKeys = rData.poolKeys;
-    clmmPoolInfo = rData.computePoolInfo;
-    tickCache = rData.tickData;
+  //   const rData = await raydium.clmm.getPoolInfoFromRpc(poolAddress.toBase58());
+  //   poolInfo = rData.poolInfo;
+  //   poolKeys = rData.poolKeys;
+  //   clmmPoolInfo = rData.computePoolInfo;
+  //   tickCache = rData.tickData;
 
-    const [inputVault] = getPoolVaultAddress(poolAddress, inputToken, CLMM_PROGRAM_ID);
-    const [outputVault] = getPoolVaultAddress(poolAddress, outputToken, CLMM_PROGRAM_ID);
+  //   const [inputVault] = getPoolVaultAddress(poolAddress, inputToken, CLMM_PROGRAM_ID);
+  //   const [outputVault] = getPoolVaultAddress(poolAddress, outputToken, CLMM_PROGRAM_ID);
 
-    if (
-      inputToken.toBase58() !== poolInfo.mintA.address &&
-      inputToken.toBase58() !== poolInfo.mintB.address
-    ) {
-      throw new Error("input mint does not match pool");
-    }
+  //   if (
+  //     inputToken.toBase58() !== poolInfo.mintA.address &&
+  //     inputToken.toBase58() !== poolInfo.mintB.address
+  //   ) {
+  //     throw new Error("input mint does not match pool");
+  //   }
 
-    const { remainingAccounts } = PoolUtils.computeAmountIn({
-      poolInfo: clmmPoolInfo,
-      tickArrayCache: tickCache[poolAddress.toBase58()],
-      amountOut: otherAmountThreshold,
-      baseMint: inputToken,
-      slippage: 0.1,
-      epochInfo: await raydium.fetchEpochInfo(),
-    });
+  //   const { remainingAccounts } = PoolUtils.computeAmountIn({
+  //     poolInfo: clmmPoolInfo,
+  //     tickArrayCache: tickCache[poolAddress.toBase58()],
+  //     amountOut: otherAmountThreshold,
+  //     baseMint: inputToken,
+  //     slippage: 0.1,
+  //     epochInfo: await raydium.fetchEpochInfo(),
+  //   });
 
-    const convertedAccountMetas: AccountMeta[] = remainingAccounts.map((account) => ({
-      pubkey: account,
-      isSigner: false,
-      isWritable: true,
-    }));
+  //   const convertedAccountMetas: AccountMeta[] = remainingAccounts.map((account) => ({
+  //     pubkey: account,
+  //     isSigner: false,
+  //     isWritable: true,
+  //   }));
 
-    convertedAccountMetas.forEach((account, index) => {
-      console.log(`Remaining Account ${index}:`, account.pubkey.toBase58());
-    });
+  //   convertedAccountMetas.forEach((account, index) => {
+  //     console.log(`Remaining Account ${index}:`, account.pubkey.toBase58());
+  //   });
 
-    console.log("ammConfig:", AMM_CONFIG.toBase58());
-    console.log("Pool address:", poolAddress.toBase58());
-    console.log("Input Vault:", inputVault.toBase58());
-    console.log("Output Vault:", outputVault.toBase58());
-    console.log("Observation State:", clmmPoolInfo.observationId.toBase58());
+  //   console.log("ammConfig:", AMM_CONFIG.toBase58());
+  //   console.log("Pool address:", poolAddress.toBase58());
+  //   console.log("Input Vault:", inputVault.toBase58());
+  //   console.log("Output Vault:", outputVault.toBase58());
+  //   console.log("Observation State:", clmmPoolInfo.observationId.toBase58());
 
-    const ix = await program.methods
-      .onCall(amount, sender, data)
-      .accounts({
-        ammConfig: AMM_CONFIG,
-        poolState: poolAddress,
-        inputVault,
-        outputVault,
-        inputVaultMint: inputToken,
-        outputVaultMint: outputToken,
-        wsolMint: WSOL_MINT,
-        observationState: clmmPoolInfo.observationId,
-        gatewayPda,
-        tokenProgram: TOKEN_PROGRAM_ID,
-      })
-      .remainingAccounts(convertedAccountMetas)
-      .instruction();
+  //   const ix = await program.methods
+  //     .onCall(amount, sender, data)
+  //     .accounts({
+  //       ammConfig: AMM_CONFIG,
+  //       poolState: poolAddress,
+  //       inputVault,
+  //       outputVault,
+  //       inputVaultMint: inputToken,
+  //       outputVaultMint: outputToken,
+  //       wsolMint: WSOL_MINT,
+  //       observationState: clmmPoolInfo.observationId,
+  //       gatewayPda,
+  //       tokenProgram: TOKEN_PROGRAM_ID,
+  //     })
+  //     .remainingAccounts(convertedAccountMetas)
+  //     .instruction();
 
-    const buildTx = new anchor.web3.Transaction().add(ix);
+  //   const buildTx = new anchor.web3.Transaction().add(ix);
 
-    const tx = await anchor.web3.sendAndConfirmTransaction(connection, buildTx, [wallet.payer], {
-      skipPreflight: true,
-    });
+  //   const tx = await anchor.web3.sendAndConfirmTransaction(connection, buildTx, [wallet.payer], {
+  //     skipPreflight: true,
+  //   });
 
-    console.log("on_call tx signature:", tx);
-  });
+  //   console.log("on_call tx signature:", tx);
+  // });
 });
 
 function bn(n: number) {
