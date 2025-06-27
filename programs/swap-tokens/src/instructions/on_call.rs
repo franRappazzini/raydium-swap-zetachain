@@ -19,8 +19,8 @@ use crate::{
 #[derive(Accounts)]
 #[instruction(amount: u64, sender: [u8; 20])]
 pub struct OnCall<'info> {
-    // #[account(mut)]
-    // pub signer: Signer<'info>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
 
     // -- zetachain accounts --
 
@@ -123,9 +123,6 @@ pub struct OnCall<'info> {
         token::token_program = token_program,
     )]
     pub wsol_gateway_account: Box<InterfaceAccount<'info, TokenAccount>>,
-
-    #[account(mut)]
-    pub signer: Signer<'info>,
 
     // SPL program 2022 for token transfers
     pub token_program_2022: Program<'info, Token2022>,

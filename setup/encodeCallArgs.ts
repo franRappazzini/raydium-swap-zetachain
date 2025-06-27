@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 
-import { AccountMeta, PublicKey } from "@solana/web3.js";
+import { AccountMeta, Keypair, PublicKey, sendAndConfirmTransaction } from "@solana/web3.js";
 import {
   ApiV3PoolInfoConcentratedItem,
   ClmmKeys,
@@ -135,11 +135,29 @@ async function encode() {
   // payer
   // const phantomWallet = new PublicKey("3jeS9PoCRKbfxkBzNsVskW8zcZ7XxiD5WGNVgAJkboz4");
 
+  const keypair = Keypair.generate();
+
+  console.log("Keypair Public Key:", keypair.publicKey.toBase58());
+  // transaction from wallet to keypair
+  const transaction = new anchor.web3.Transaction().add(
+    anchor.web3.SystemProgram.transfer({
+      fromPubkey: wallet.publicKey,
+      toPubkey: keypair.publicKey,
+      lamports: 1_000_000, // 0.001 SOL
+    })
+  );
+
+  // Send the transaction
+  const signature = await sendAndConfirmTransaction(connection, transaction, [wallet.payer], {
+    skipPreflight: true,
+  });
+  console.log("Transaction signature:", signature);
+
   const accounts = [
-    // {
-    //   isWritable: true,
-    //   publicKey: ethers.hexlify(phantomWallet.toBytes()),
-    // },
+    {
+      isWritable: true,
+      publicKey: ethers.hexlify(keypair.publicKey.toBytes()),
+    },
     {
       isWritable: false,
       publicKey: ethers.hexlify(gatewayPda.toBytes()),
